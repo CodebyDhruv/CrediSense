@@ -1,0 +1,28 @@
+# Python / Backend
+servers/venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.env
+.pytest_cache/
+
+# Node / Frontend
+website/node_modules/
+website/dist/
+website/.env
+website/.env.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDEs and OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
