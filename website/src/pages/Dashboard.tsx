@@ -4,22 +4,22 @@ import { Link } from "react-router-dom"
 export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-8">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-10">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Good morning, Officer</h1>
-          <p className="mt-1 text-sm text-slate-500">Here's a digest of your recent corporate lending pipeline.</p>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Good morning, Officer</h1>
+          <p className="mt-2 text-[15px] text-slate-500 font-medium">Here's a digest of your recent corporate lending pipeline.</p>
         </div>
         <div className="mt-4 md:mt-0 flex">
-          <Link to="/assessment" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+          <Link to="/assessments/new" className="inline-flex items-center px-6 py-3 border border-transparent text-[15px] font-bold rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900">
             Start New Assessment
           </Link>
         </div>
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8 animate-fade-in">
         {/* Stat Card 1 */}
-        <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200">
+        <div className="bg-white overflow-hidden shadow-sm hover:shadow bg-white hover:shadow-md transition-all duration-300 rounded-xl border border-slate-200/60">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -35,15 +35,15 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="bg-slate-50 px-5 py-3 border-t border-slate-200">
+          <div className="bg-slate-50/50 px-5 py-3 border-t border-slate-100">
             <div className="text-sm">
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">View all</a>
+              <a href="#" className="font-medium text-brand-600 hover:text-brand-500 transition-colors">View all</a>
             </div>
           </div>
         </div>
 
         {/* Stat Card 2 */}
-        <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200">
+        <div className="bg-white overflow-hidden shadow-sm hover:shadow bg-white hover:shadow-md transition-all duration-300 rounded-xl border border-slate-200/60">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -59,15 +59,15 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="bg-slate-50 px-5 py-3 border-t border-slate-200">
+          <div className="bg-slate-50/50 px-5 py-3 border-t border-slate-100">
             <div className="text-sm">
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">View all</a>
+              <a href="#" className="font-medium text-brand-600 hover:text-brand-500 transition-colors">View all</a>
             </div>
           </div>
         </div>
 
         {/* Stat Card 3 */}
-        <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200">
+        <div className="bg-white overflow-hidden shadow-sm hover:shadow bg-white hover:shadow-md transition-all duration-300 rounded-xl border border-slate-200/60">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -83,15 +83,15 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="bg-slate-50 px-5 py-3 border-t border-slate-200">
+          <div className="bg-slate-50/50 px-5 py-3 border-t border-slate-100">
             <div className="text-sm">
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">Review alerts</a>
+              <a href="#" className="font-medium text-brand-600 hover:text-brand-500 transition-colors">Review alerts</a>
             </div>
           </div>
         </div>
 
         {/* Stat Card 4 */}
-        <div className="bg-white overflow-hidden shadow-sm rounded-lg border border-slate-200">
+        <div className="bg-white overflow-hidden shadow-sm hover:shadow bg-white hover:shadow-md transition-all duration-300 rounded-xl border border-slate-200/60">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -107,19 +107,19 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <div className="bg-slate-50 px-5 py-3 border-t border-slate-200">
+          <div className="bg-slate-50/50 px-5 py-3 border-t border-slate-100">
             <div className="text-sm">
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">View portfolio</a>
+              <a href="#" className="font-medium text-brand-600 hover:text-brand-500 transition-colors">View portfolio</a>
             </div>
           </div>
         </div>
       </div>
 
       {/* Recent Activity & Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-slide-up">
+
         {/* Recent Applications List */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-slate-200">
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200/60">
           <div className="px-6 py-5 border-b border-slate-200 flex justify-between items-center">
             <h3 className="text-lg leading-6 font-medium text-slate-900">Recent Applications</h3>
             <button className="text-sm text-blue-600 font-medium hover:text-blue-700">See all</button>
@@ -136,18 +136,18 @@ export default function Dashboard() {
                         <p className="ml-1 flex-shrink-0 font-normal text-slate-500">in IT Consulting</p>
                       </div>
                       <div className="mt-2 flex">
-                        <div className="flex items-center text-sm text-slate-500">
-                          <CheckCircle className="flex-shrink-0 mr-1.5 h-4 w-4 text-green-400" />
+                        <div className="flex items-center text-[13px] text-slate-500 font-medium">
+                          <CheckCircle className="flex-shrink-0 mr-1.5 h-4 w-4 text-green-500" />
                           <p>
-                            AI Pre-screening <span className="font-medium text-slate-900">Complete</span>
+                            Onboarding & Ingestion <span className="font-bold text-slate-900">Complete</span>
                           </p>
                         </div>
                       </div>
                     </div>
                     <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
                       <div className="flex -space-x-1 overflow-hidden">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Review CAM
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[13px] font-bold bg-brand-50 text-brand-700 border border-brand-200">
+                          Extraction Pending
                         </span>
                       </div>
                     </div>
@@ -158,7 +158,7 @@ export default function Dashboard() {
                 </div>
               </a>
             </li>
-            
+
             {/* Applicant 2 */}
             <li>
               <a href="#" className="block hover:bg-slate-50 transition-colors">
@@ -170,18 +170,18 @@ export default function Dashboard() {
                         <p className="ml-1 flex-shrink-0 font-normal text-slate-500">in Industrials</p>
                       </div>
                       <div className="mt-2 flex">
-                        <div className="flex items-center text-sm text-slate-500">
-                          <AlertTriangle className="flex-shrink-0 mr-1.5 h-4 w-4 text-yellow-400" />
+                        <div className="flex items-center text-[13px] text-slate-500 font-medium">
+                          <AlertTriangle className="flex-shrink-0 mr-1.5 h-4 w-4 text-amber-500" />
                           <p>
-                            Needs details: <span className="font-medium text-slate-900">GSTR-3B Mismatch</span>
+                            Needs classification: <span className="font-bold text-slate-900">3 Unknown Docs</span>
                           </p>
                         </div>
                       </div>
                     </div>
                     <div className="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
                       <div className="flex -space-x-1 overflow-hidden">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          Pending Info
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[13px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                          Action Required
                         </span>
                       </div>
                     </div>
@@ -196,7 +196,7 @@ export default function Dashboard() {
         </div>
 
         {/* Intelligence feed */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+        <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200/60">
           <div className="px-6 py-5 border-b border-slate-200">
             <h3 className="text-lg leading-6 font-medium text-slate-900">Agent Intelligence Alerts</h3>
           </div>
@@ -224,7 +224,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </li>
-                
+
                 <li className="relative">
                   <div className="relative flex items-start space-x-3">
                     <div className="relative">
@@ -247,7 +247,7 @@ export default function Dashboard() {
                 </li>
               </ul>
             </div>
-            
+
             <div className="pt-4 border-t border-slate-200">
               <button className="w-full flex items-center justify-center px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50">
                 View All Intelligence
