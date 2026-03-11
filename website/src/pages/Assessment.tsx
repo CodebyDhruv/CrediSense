@@ -75,10 +75,13 @@ export default function Assessment() {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = () => {
-    if (activeUploadDoc) {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (activeUploadDoc && e.target.files && e.target.files.length > 0) {
       setUploads(prev => ({ ...prev, [activeUploadDoc]: true }));
       setActiveUploadDoc(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
