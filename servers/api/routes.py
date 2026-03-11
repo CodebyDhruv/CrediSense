@@ -9,21 +9,15 @@ from models.schemas import (
     ExtractedFinancials, StructuredDataAnomaly, RiskAlert,
     FiveCsScore, FiveCsNarrative, CreditDecision
 )
-from store import applications_db, documents_db, insights_db, research_db, cam_reports_db
+from store import db
 from services.ingestor import IngestorService
 
 ingestor_service = IngestorService()
-
 router = APIRouter()
-
-
-# Health Check
 
 @router.get("/health")
 def health_check():
     return {"status": "ok"}
-
-# Route 1: Create a new loan application
 
 @router.post("/applications", response_model=CompanyApplication)
 def create_application(app_data: CompanyApplicationCreate):
@@ -32,27 +26,29 @@ def create_application(app_data: CompanyApplicationCreate):
         id=app_id,
         **app_data.model_dump()
     )
-    applications_db[app_id] = application
+    
+    if db.client:
+        data = application.model_dump(mode="json")
+        res = db.client.table("applications").insert(data).execute()
+        if not res.data:
+            raise HTTPException(status_code=500, detail="Failed to save application")
     return application
-
-
-# Route 2: List all applications
 
 @router.get("/applications", response_model=list[CompanyApplication])
 def list_applications():
-    return list(applications_db.values())
-
-# Route 3: Get a single application by ID
+    if db.client:
+        res = db.client.table("applications").select("*").execute()
+        return [CompanyApplication(**row) for row in res.data]
+    return []
 
 @router.get("/applications/{application_id}", response_model=CompanyApplication)
 def get_application(application_id: str):
-    if application_id not in applications_db:
-        raise HTTPException(status_code=404, detail="Application not found")
-    return applications_db[application_id]
-
-
-
-# Route 4: Upload and parse a document (PDF/CSV)
+    if db.client:
+        res = db.client.table("applications").select("*").eq("id", application_id).execute()
+        if not res.data:
+            raise HTTPException(status_code=404, detail="Application not found")
+        return CompanyApplication(**res.data[0])
+    raise HTTPException(status_code=500, detail="Database not configured")
 
 @router.post("/ingest/document", response_model=DocumentUploadResponse)
 async def upload_document(
@@ -60,10 +56,13 @@ async def upload_document(
     application_id: str = Form(...),
     file_type: DocumentType = Form(...)
 ):
-    if application_id not in applications_db:
-        raise HTTPException(status_code=404, detail="Application not found")
-
-    applications_db[application_id].status = ApplicationStatus.INGESTING
+    if db.client:
+        app_res = db.client.table("applications").select("*").eq("id", application_id).execute()
+        if not app_res.data:
+            raise HTTPException(status_code=404, detail="Application not found")
+        
+        # update status
+        db.client.table("applications").update({"status": ApplicationStatus.INGESTING}).eq("id", application_id).execute()
 
     file_content = await file.read()
     doc_id = f"DOC-{uuid.uuid4().hex[:6]}"
@@ -78,9 +77,9 @@ async def upload_document(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process document: {str(e)}")
 
-    if application_id not in documents_db:
-        documents_db[application_id] = []
-    documents_db[application_id].append(document)
+    if db.client:
+        doc_data = document.model_dump(mode="json")
+        db.client.table("ingested_documents").insert(doc_data).execute()
 
     return DocumentUploadResponse(
         success=True,
@@ -88,19 +87,16 @@ async def upload_document(
         message=f"Document '{file.filename}' processed successfully."
     )
 
-
-
-# Route 5: Upload structured data (CSV/Excel)
-
-
 @router.post("/ingest/structured", response_model=DocumentUploadResponse)
 async def upload_structured_data(
     file: UploadFile = File(...),
     application_id: str = Form(...),
     file_type: DocumentType = Form(...)
 ):
-    if application_id not in applications_db:
-        raise HTTPException(status_code=404, detail="Application not found")
+    if db.client:
+        app_res = db.client.table("applications").select("*").eq("id", application_id).execute()
+        if not app_res.data:
+            raise HTTPException(status_code=404, detail="Application not found")
 
     file_content = await file.read()
     doc_id = f"DOC-{uuid.uuid4().hex[:6]}"
@@ -116,9 +112,9 @@ async def upload_structured_data(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process structured data: {str(e)}")
 
-    if application_id not in documents_db:
-        documents_db[application_id] = []
-    documents_db[application_id].append(document)
+    if db.client:
+        doc_data = document.model_dump(mode="json")
+        db.client.table("ingested_documents").insert(doc_data).execute()
 
     return DocumentUploadResponse(
         success=True,
@@ -126,127 +122,132 @@ async def upload_structured_data(
         message=f"Structured file '{file.filename}' processed successfully."
     )
 
-
-
-# Route 6: Get all documents for an application
-
-
 @router.get("/ingest/documents/{application_id}", response_model=list[IngestedDocument])
 def get_documents(application_id: str):
-    if application_id not in applications_db:
-        raise HTTPException(status_code=404, detail="Application not found")
-    return documents_db.get(application_id, [])
-
-
-
-# Route 7: Trigger web research for a company
-
+    if db.client:
+        res = db.client.table("ingested_documents").select("*").eq("application_id", application_id).execute()
+        return [IngestedDocument(**row) for row in res.data]
+    return []
 
 @router.get("/research/company/{application_id}", response_model=ResearchResult)
 def research_company(application_id: str):
-    if application_id not in applications_db:
-        raise HTTPException(status_code=404, detail="Application not found")
+    if db.client:
+        app_res = db.client.table("applications").select("*").eq("id", application_id).execute()
+        if not app_res.data:
+            raise HTTPException(status_code=404, detail="Application not found")
+        company_name = app_res.data[0]['company_name']
+        db.client.table("applications").update({"status": ApplicationStatus.RESEARCHING}).eq("id", application_id).execute()
+    else:
+        company_name = "Mock Company"
 
-    app = applications_db[application_id]
-    app.status = ApplicationStatus.RESEARCHING
-
-    # TODO: Replace with actual ResearcherService web crawling
     result = ResearchResult(
         application_id=application_id,
-        company_name=app.company_name,
+        company_name=company_name,
         alerts=[],
         sector_outlook="[Pending] Research not yet implemented",
         promoter_background="[Pending] Research not yet implemented"
     )
 
-    research_db[application_id] = result
+    if db.client:
+        db_data = {
+            "application_id": result.application_id,
+            "sector_outlook": result.sector_outlook,
+            "promoter_background": result.promoter_background,
+            "researched_at": result.researched_at.isoformat()
+        }
+        db.client.table("research_results").insert(db_data).execute()
+
     return result
-
-
-
-# Route 8: Submit primary insights (Credit Officer notes)
-
 
 @router.post("/engine/primary-insights", response_model=PrimaryInsight)
 def add_primary_insight(insight_data: PrimaryInsightCreate):
-    if insight_data.application_id not in applications_db:
-        raise HTTPException(status_code=404, detail="Application not found")
-
     insight_id = f"INS-{uuid.uuid4().hex[:6]}"
-
     insight = PrimaryInsight(
         id=insight_id,
         **insight_data.model_dump()
     )
 
-    if insight_data.application_id not in insights_db:
-        insights_db[insight_data.application_id] = []
-    insights_db[insight_data.application_id].append(insight)
+    if db.client:
+        app_res = db.client.table("applications").select("id").eq("id", insight_data.application_id).execute()
+        if not app_res.data:
+            raise HTTPException(status_code=404, detail="Application not found")
+            
+        data = insight.model_dump(mode="json")
+        db.client.table("primary_insights").insert(data).execute()
 
     return insight
 
-
-
-# Route 9: Get all insights for an application
-
-
 @router.get("/engine/insights/{application_id}", response_model=list[PrimaryInsight])
 def get_insights(application_id: str):
-    if application_id not in applications_db:
-        raise HTTPException(status_code=404, detail="Application not found")
-    return insights_db.get(application_id, [])
-
-
-
-# Route 10: Generate the CAM Report
-
+    if db.client:
+        res = db.client.table("primary_insights").select("*").eq("application_id", application_id).execute()
+        return [PrimaryInsight(**row) for row in res.data]
+    return []
 
 @router.post("/engine/generate-cam", response_model=CAMReport)
 def generate_cam(application_id: str):
-    if application_id not in applications_db:
+    if not db.client:
+        raise HTTPException(status_code=500, detail="Database not configured")
+        
+    app_res = db.client.table("applications").select("*").eq("id", application_id).execute()
+    if not app_res.data:
         raise HTTPException(status_code=404, detail="Application not found")
-
-    app = applications_db[application_id]
-    app.status = ApplicationStatus.UNDER_REVIEW
+        
+    app = CompanyApplication(**app_res.data[0])
+    
+    db.client.table("applications").update({"status": ApplicationStatus.UNDER_REVIEW}).eq("id", application_id).execute()
 
     cam_id = f"CAM-{uuid.uuid4().hex[:6]}"
-
-    # TODO: Replace with actual EngineService CAM generation
-    # This will use LangChain + OpenAI to generate the Five Cs, scoring, and decision
+    
+    res_insights = db.client.table("primary_insights").select("*").eq("application_id", application_id).execute()
+    insights = [PrimaryInsight(**row) for row in res_insights.data]
+    
+    res_research = db.client.table("research_results").select("*").eq("application_id", application_id).execute()
+    research = res_research.data[0] if res_research.data else {}
+    
+    res_alerts = db.client.table("risk_alerts").select("*").eq("application_id", application_id).execute()
+    alerts = [RiskAlert(**row) for row in res_alerts.data]
+    
     cam = CAMReport(
         id=cam_id,
         application=app,
         financials=None,
         anomalies=[],
-        risk_alerts=research_db.get(application_id, ResearchResult(
-            application_id=application_id,
-            company_name=app.company_name
-        )).alerts,
-        primary_insights=insights_db.get(application_id, []),
-        sector_outlook=research_db.get(application_id, ResearchResult(
-            application_id=application_id,
-            company_name=app.company_name
-        )).sector_outlook,
-        promoter_background=research_db.get(application_id, ResearchResult(
-            application_id=application_id,
-            company_name=app.company_name
-        )).promoter_background,
+        risk_alerts=alerts,
+        primary_insights=insights,
+        sector_outlook=research.get("sector_outlook", ""),
+        promoter_background=research.get("promoter_background", ""),
         five_cs_scores=None,
         five_cs_narrative=None,
         decision=None
     )
 
-    cam_reports_db[application_id] = cam
-    return cam
+    cam_data = {
+        "id": cam.id,
+        "application_id": cam.application.id,
+        "sector_outlook": cam.sector_outlook,
+        "promoter_background": cam.promoter_background,
+        "five_cs_scores": None,
+        "five_cs_narrative": None,
+        "decision": None,
+        "generated_at": cam.generated_at.isoformat()
+    }
+    
+    existing_cam = db.client.table("cam_reports").select("id").eq("application_id", application_id).execute()
+    if existing_cam.data:
+        db.client.table("cam_reports").update(cam_data).eq("application_id", application_id).execute()
+    else:
+        db.client.table("cam_reports").insert(cam_data).execute()
 
-# Route 11: Export CAM as Word/PDF
+    return cam
 
 @router.post("/engine/export-cam")
 def export_cam(export_request: CAMExportRequest):
-    if export_request.application_id not in cam_reports_db:
-        raise HTTPException(status_code=404, detail="CAM not generated yet. Call /engine/generate-cam first.")
+    if db.client:
+        cam_res = db.client.table("cam_reports").select("id").eq("application_id", export_request.application_id).execute()
+        if not cam_res.data:
+            raise HTTPException(status_code=404, detail="CAM not generated yet. Call /engine/generate-cam first.")
 
-    # TODO: Replace with actual python-docx / reportlab export logic
     return APIResponse(
         success=True,
         message=f"CAM export in {export_request.format.value} format is not yet implemented.",
